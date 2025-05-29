@@ -1,5 +1,7 @@
 #include <stdio.h>
 
+#define MAX_SIZE 100
+
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         printf("No file selected\n");
@@ -15,10 +17,12 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    char code[100];
-    fgets(code, 100, file);
+    char data[MAX_SIZE];
+    int n = fread(data, 1, MAX_SIZE - 1, file);
 
-    printf("%s", code);
+    data[n] = '\0';
+
+    printf("%s", data);
 
     fclose(file);
 
