@@ -1,10 +1,13 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "token.h"
 
 #define MAX_SIZE 100
 
-void tokenize(const char *input) {
+TokenArray* tokenize(const char *input) {
+    TokenArray *tokens = token_array_init(50);
     int i = 0;
     while (input[i] != '\0') {
         if (isspace(input[i])) {
@@ -18,11 +21,11 @@ void tokenize(const char *input) {
             word[j] = '\0';
 
             if (strcmp(word, "let") == 0) {
-                printf("[LET] ");
+                token_array_add(tokens, create_keyword_token(TOKEN_LET));
             } else if (strcmp(word, "print") == 0) {
-                printf("[PRINT] ");
+                token_array_add(tokens, create_keyword_token(TOKEN_PRINT));
             } else {
-                printf("[IDENTIFIER(%s)] ", word);
+                token_array_add(tokens, create_identifier_token(word));
             }
         } else if (isdigit(input[i])) {
             // Read number
@@ -32,25 +35,47 @@ void tokenize(const char *input) {
                 number[j++] = input[i++];
             }
             number[j] = '\0';
-            printf("[NUMBER(%s)] ", number);
+            token_array_add(tokens, create_number_token(atof(number)));
         } else {
             // Single-character tokens
+            Token token;
             switch (input[i]) {
-                case '=': printf("[EQUALS] "); break;
-                case '+': printf("[PLUS] "); break;
-                case '-': printf("[MINUS] "); break;
-                case '*': printf("[STAR] "); break;
-                case '/': printf("[SLASH] "); break;
-                case '(': printf("[LPAREN] "); break;
-                case ')': printf("[RPAREN] "); break;
-                case ';': printf("[SEMICOLON] "); break;
-                default:  printf("[UNKNOWN(%c)] ", input[i]); break;
+                case '=':
+                    token = create_keyword_token(TOKEN_EQUALS);
+                    break;
+                case '+':
+                    token = create_keyword_token(TOKEN_PLUS);
+                    break;
+                case '-':
+                    token = create_keyword_token(TOKEN_MINUS);
+                    break;
+                case '*':
+                    token = create_keyword_token(TOKEN_STAR);
+                    break;
+                case '/':
+                    token = create_keyword_token(TOKEN_SLASH);
+                    break;
+                case '(':
+                    token = create_keyword_token(TOKEN_LPAREN);
+                    break;
+                case ')':
+                    token = create_keyword_token(TOKEN_RPAREN);
+                    break;
+                case ';':
+                    token = create_keyword_token(TOKEN_SEMICOLON);
+                    break;
+                default:
+                    char unknown[2] = {input[i], '\0'};
+                    token = create_identifier_token(unknown);
+                    token.type = TOKEN_UNKNOWN;
+                    break;
             }
+            token_array_add(tokens, token);
             i++;
         }
     }
 
-    printf("\n");
+    return tokens;
 }
 
 int main(int argc, char *argv[]) {
@@ -72,10 +97,20 @@ int main(int argc, char *argv[]) {
     int n = fread(data, 1, MAX_SIZE - 1, file);
 
     data[n] = '\0';
-
     printf("Source Code:\n%s\n", data);
+    
     printf("\nTokens\n");
-    tokenize(data);
+    TokenArray* tokens = tokenize(data);
+    for (int i = 0; i < tokens->count; i++) {
+        Token token = tokens->tokens[i];
+        char *token_str = token_to_string(token);
+        printf("%s ", token_str);
+        free(token_str);
+    }
+
+    printf("\n");
+
+    token_array_free(tokens);
 
     fclose(file);
 
