@@ -59,4 +59,6 @@ const char* token_type_to_string(TokenType type);
 // Get string representation of token (for debugging)
 char* token_to_string(Token token);
 
+TokenArray* tokenize(const char *input);
+
 #endif // TOKEN_H

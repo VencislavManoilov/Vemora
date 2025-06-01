@@ -1,5 +1,8 @@
 #include "token.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 
 TokenArray* token_array_init(int initial_capacity) {
     TokenArray *array = (TokenArray*)malloc(sizeof(TokenArray));
@@ -96,4 +99,77 @@ char* token_to_string(Token token) {
     }
     
     return strdup(buffer);
+}
+
+TokenArray* tokenize(const char *input) {
+    TokenArray *tokens = token_array_init(50);
+    int i = 0;
+    while (input[i] != '\0') {
+        if (isspace(input[i])) {
+            i++;
+        } else if (isalpha(input[i])) {
+            char word[50];
+            int j = 0;
+            while (isalnum(input[i])) {
+                word[j++] = input[i++];
+            }
+            word[j] = '\0';
+
+            if (strcmp(word, "let") == 0) {
+                token_array_add(tokens, create_keyword_token(TOKEN_LET));
+            } else if (strcmp(word, "print") == 0) {
+                token_array_add(tokens, create_keyword_token(TOKEN_PRINT));
+            } else {
+                token_array_add(tokens, create_identifier_token(word));
+            }
+        } else if (isdigit(input[i])) {
+            // Read number
+            char number[20];
+            int j = 0;
+            while (isdigit(input[i])) {
+                number[j++] = input[i++];
+            }
+            number[j] = '\0';
+            token_array_add(tokens, create_number_token(atof(number)));
+        } else {
+            // Single-character tokens
+            Token token;
+            switch (input[i]) {
+                case '=':
+                    token = create_keyword_token(TOKEN_EQUALS);
+                    break;
+                case '+':
+                    token = create_keyword_token(TOKEN_PLUS);
+                    break;
+                case '-':
+                    token = create_keyword_token(TOKEN_MINUS);
+                    break;
+                case '*':
+                    token = create_keyword_token(TOKEN_STAR);
+                    break;
+                case '/':
+                    token = create_keyword_token(TOKEN_SLASH);
+                    break;
+                case '(':
+                    token = create_keyword_token(TOKEN_LPAREN);
+                    break;
+                case ')':
+                    token = create_keyword_token(TOKEN_RPAREN);
+                    break;
+                case ';':
+                    token = create_keyword_token(TOKEN_SEMICOLON);
+                    break;
+                default: {
+                    char unknown[2] = {input[i], '\0'};
+                    token = create_identifier_token(unknown);
+                    token.type = TOKEN_UNKNOWN;
+                    break;
+                }
+            }
+            token_array_add(tokens, token);
+            i++;
+        }
+    }
+
+    return tokens;
 }
