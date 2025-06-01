@@ -1,8 +1,8 @@
-*.exe
-# Executables without extensions (Linux)
+# Executables
 *
 !*.*
 !*/
+*.exe
 
 # This is the file extension for my programming language
 # Stands for "Vemora" - really smooth isn't it?
