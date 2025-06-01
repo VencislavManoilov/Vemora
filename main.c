@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "token.h"
+#include "ast.h"
 
 #define MAX_SIZE 100
 
@@ -27,7 +28,7 @@ int main(int argc, char *argv[]) {
     data[n] = '\0';
     printf("Source Code:\n%s\n", data);
     
-    printf("\nTokens\n");
+    printf("\nTokens:\n");
     TokenArray* tokens = tokenize(data);
     for (int i = 0; i < tokens->count; i++) {
         Token token = tokens->tokens[i];
@@ -35,11 +36,17 @@ int main(int argc, char *argv[]) {
         printf("%s ", token_str);
         free(token_str);
     }
-
     printf("\n");
 
-    token_array_free(tokens);
+    printf("\nAST:\n");
+    Parser *parser = parser_create(tokens);
+    ASTNode *ast = parse_program(parser);
+    ast_print(ast, 0);
 
+    // Cleanup
+    ast_node_free(ast);
+    parser_free(parser);
+    token_array_free(tokens);
     fclose(file);
 
     return 0;
