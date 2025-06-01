@@ -26,7 +26,9 @@ int main(int argc, char *argv[]) {
     int n = fread(data, 1, MAX_SIZE - 1, file);
 
     data[n] = '\0';
-    printf("Source Code:\n%s\n", data);
+    printf("\nSource Code:\n%s\n", data);
+    
+    printf("\nv v v\n");
     
     printf("\nTokens:\n");
     TokenArray* tokens = tokenize(data);
@@ -37,6 +39,8 @@ int main(int argc, char *argv[]) {
         free(token_str);
     }
     printf("\n");
+    
+    printf("\nv v v\n");
 
     printf("\nAST:\n");
     Parser *parser = parser_create(tokens);
