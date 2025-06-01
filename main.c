@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include "token.h"
 #include "ast.h"
+#include "codegen.h"
 
 #define MAX_SIZE 100
 
@@ -47,7 +48,25 @@ int main(int argc, char *argv[]) {
     ASTNode *ast = parse_program(parser);
     ast_print(ast, 0);
 
+    printf("\nv v v\n");
+
+    // Generate assembly
+    printf("\nGenerating assembly...\n");
+    FILE *asm_file = fopen("output.asm", "w");
+    if (asm_file == NULL) {
+        printf("Error creating assembly file\n");
+        return 1;
+    }
+    
+    CodeGenerator *codegen = codegen_create(asm_file);
+    codegen_generate(codegen, ast);
+    fclose(asm_file);
+    
+    printf("Assembly generated in output.asm\n");
+    printf("To compile: nasm -f elf64 output.asm -o output.o && gcc -no-pie output.o -o output\n");
+
     // Cleanup
+    codegen_free(codegen);
     ast_node_free(ast);
     parser_free(parser);
     token_array_free(tokens);
