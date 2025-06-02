@@ -63,7 +63,21 @@ int main(int argc, char *argv[]) {
     fclose(asm_file);
     
     printf("Assembly generated in output.asm\n");
-    printf("To compile: nasm -f elf64 output.asm -o output.o && gcc -no-pie output.o -o output\n");
+    // Compile the generated assembly
+    printf("Compiling the assembly...\n");
+    int nasm_result = system("nasm -f elf64 output.asm -o output.o");
+    if (nasm_result != 0) {
+        printf("Error running nasm command\n");
+        return 1;
+    }
+    
+    int ld_result = system("ld output.o -o output");
+    if (ld_result != 0) {
+        printf("Error running ld command\n");
+        return 1;
+    }
+    
+    printf("Compilation successful. Executable created as 'output'\n");
 
     // Cleanup
     codegen_free(codegen);
