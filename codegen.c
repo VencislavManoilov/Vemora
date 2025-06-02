@@ -56,15 +56,48 @@ void codegen_statement(CodeGenerator *codegen, ASTNode *node);
 
 void codegen_generate(CodeGenerator *codegen, ASTNode *ast) {
     fprintf(codegen->output, "section .data\n");
-    fprintf(codegen->output, "    fmt_float db \"%%g\", 10, 0\n");
-    
-    // Add floating-point constants section
-    fprintf(codegen->output, "section .rodata\n");
-    fprintf(codegen->output, "    align 8\n");
+    fprintf(codegen->output, "    newline db 10, 0\n");
+    fprintf(codegen->output, "    output_buffer db '                    ', 0  ; Buffer for number conversion\n");
     
     fprintf(codegen->output, "\nsection .text\n");
-    fprintf(codegen->output, "    extern printf\n");
     fprintf(codegen->output, "    global _start\n\n");
+    
+    // Helper function to print a floating point number
+    fprintf(codegen->output, "print_float:\n");
+    fprintf(codegen->output, "    ; Simple float printing (prints integer part only for now)\n");
+    fprintf(codegen->output, "    cvttsd2si rax, xmm0     ; Convert float to integer\n");
+    fprintf(codegen->output, "    \n");
+    fprintf(codegen->output, "    ; Convert integer to string\n");
+    fprintf(codegen->output, "    mov rdi, output_buffer + 19  ; Point to end of buffer\n");
+    fprintf(codegen->output, "    mov byte [rdi], 0       ; Null terminate\n");
+    fprintf(codegen->output, "    dec rdi\n");
+    fprintf(codegen->output, "    mov rbx, 10\n");
+    fprintf(codegen->output, "    \n");
+    fprintf(codegen->output, "convert_loop:\n");
+    fprintf(codegen->output, "    xor rdx, rdx\n");
+    fprintf(codegen->output, "    div rbx\n");
+    fprintf(codegen->output, "    add dl, '0'\n");
+    fprintf(codegen->output, "    mov [rdi], dl\n");
+    fprintf(codegen->output, "    dec rdi\n");
+    fprintf(codegen->output, "    test rax, rax\n");
+    fprintf(codegen->output, "    jnz convert_loop\n");
+    fprintf(codegen->output, "    \n");
+    fprintf(codegen->output, "    ; Print the string\n");
+    fprintf(codegen->output, "    inc rdi                 ; Point to first digit\n");
+    fprintf(codegen->output, "    mov rax, 1              ; sys_write\n");
+    fprintf(codegen->output, "    mov rsi, rdi            ; String to print\n");
+    fprintf(codegen->output, "    mov rdi, 1              ; stdout\n");
+    fprintf(codegen->output, "    mov rdx, output_buffer + 20\n");
+    fprintf(codegen->output, "    sub rdx, rsi            ; Calculate length\n");
+    fprintf(codegen->output, "    syscall\n");
+    fprintf(codegen->output, "    \n");
+    fprintf(codegen->output, "    ; Print newline\n"); 
+    fprintf(codegen->output, "    mov rax, 1              ; sys_write\n");
+    fprintf(codegen->output, "    mov rdi, 1              ; stdout\n");
+    fprintf(codegen->output, "    mov rsi, newline        ; newline character\n");
+    fprintf(codegen->output, "    mov rdx, 1              ; length\n");
+    fprintf(codegen->output, "    syscall\n");
+    fprintf(codegen->output, "    ret\n\n");
     
     fprintf(codegen->output, "_start:\n");
     fprintf(codegen->output, "    push rbp\n");
@@ -104,10 +137,8 @@ void codegen_statement(CodeGenerator *codegen, ASTNode *node) {
             fprintf(codegen->output, "    ; Print statement\n");
             codegen_expression(codegen, node->data.print_statement.expression);
             
-            fprintf(codegen->output, "    ; Call printf\n");
-            fprintf(codegen->output, "    mov rdi, fmt_float\n");
-            fprintf(codegen->output, "    mov rax, 1      ; 1 xmm register used\n");
-            fprintf(codegen->output, "    call printf\n\n");
+            fprintf(codegen->output, "    ; Call print function\n");
+            fprintf(codegen->output, "    call print_float\n\n");
             break;
         }
         case AST_PROGRAM:
