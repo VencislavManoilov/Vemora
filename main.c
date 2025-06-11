@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
+#include <stdbool.h>
 #include "token.h"
 #include "ast.h"
 #include "codegen.h"
@@ -11,12 +11,15 @@
 int main(int argc, char *argv[]) {
     bool onlyCompile = false;
     bool debug = false;
+    bool saveAssembly = false;
 
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--only-compile") == 0) {
             onlyCompile = true;
         } else if (strcmp(argv[i], "--debug") == 0) {
             debug = true;
+        } else if (strcmp(argv[i], "--save-assembly") == 0) {
+            saveAssembly = true;
         }
     }
 
@@ -90,6 +93,15 @@ int main(int argc, char *argv[]) {
     }
     
     debug && printf("Compilation successful. Executable created as 'output'\n");
+
+    // Run the script
+    if (!onlyCompile) {
+        system("rm -rf ./output.o");
+        if(!saveAssembly) {
+            system("rm -rf ./output.asm");
+        }
+        system("./output");
+    }
 
     // Cleanup
     codegen_free(codegen);
